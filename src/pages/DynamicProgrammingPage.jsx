@@ -33,16 +33,51 @@ export const DynamicProgrammingPage = () => {
         [30, 25, 10, 0]
       ],
       values: [0, 0, 0, 0]
+    },
+    wyndorGlass: {
+      numItems: 2,
+      weights: [1, 2],
+      values: [3, 5]
+    },
+    ganadoraLasVegas: {
+      numItems: 3,
+      weights: [4, 5, 6],
+      values: [7, 8, 9]
+    },
+    modeloInversion: {
+      numItems: 4,
+      weights: [5, 10, 15, 20],
+      values: [10, 20, 30, 40]
+    },
+    modeloReemplazoEquipo: {
+      numItems: 5,
+      weights: [1, 2, 3, 4, 5],
+      values: [5, 4, 3, 2, 1]
+    },
+    modeloTamañoFuerza: {
+      numItems: 3,
+      weights: [2, 4, 6],
+      values: [1, 2, 3]
+    },
+    nivelEmpleados: {
+      numItems: 3,
+      weights: [3, 6, 9],
+      values: [2, 4, 6]
+    },
+    holguraPorRechazos: {
+      numItems: 2,
+      weights: [5, 10],
+      values: [3, 6]
     }
   };
 
   useEffect(() => {
     const problemData = predefinedProblems[problemType];
     setNumItems(problemData.numItems);
-    setCapacity(problemData.capacity);
+    setCapacity(problemData.capacity || 0);
     setWeights(problemData.weights);
     setValues(problemData.values);
-    setDistances(problemData.weights);
+    setDistances(problemData.weights || []);
   }, [problemType]);
 
   const handleInputChange = (e, type, index) => {
@@ -76,7 +111,7 @@ export const DynamicProgrammingPage = () => {
         alert('Por favor, ingrese correctamente todas las distancias.');
         return;
       }
-    }    
+    }
 
     let dp, maxValue, itemsSelected;
 
@@ -104,7 +139,6 @@ export const DynamicProgrammingPage = () => {
           w -= weights[i - 1];
         }
       }
-
     } else if (problemType === 'brigades') {
       dp = Array(numItems + 1).fill(null).map(() =>
         Array(capacity + 1).fill(0)
@@ -132,7 +166,6 @@ export const DynamicProgrammingPage = () => {
       }
 
       itemsSelected = brigadeAssignments.map((num, idx) => `País/Punto ${idx + 1}: ${num} brigadas`);
-
     } else if (problemType === 'routes') {
       const dist = distances;
 
@@ -143,7 +176,7 @@ export const DynamicProgrammingPage = () => {
             return;
           }
         }
-      }      
+      }
 
       dp = Array(numItems).fill(Infinity);
       dp[0] = 0;
@@ -169,7 +202,37 @@ export const DynamicProgrammingPage = () => {
       }
 
       itemsSelected = path.reverse().map(city => `Ciudad ${city + 1}`);
-    }
+    } else if (problemType === 'wyndorGlass') {
+      // Lógica para resolver el problema de Wyndor Glass
+      maxValue = Math.max(...values); // Ejemplo simplista
+      itemsSelected = [values.indexOf(maxValue)];
+    } else if (problemType === 'ganadoraLasVegas') {
+      // Lógica para Ganadora de Las Vegas
+      maxValue = values.reduce((acc, val) => acc + val, 0); // Suma de valores
+      itemsSelected = values.map((val, idx) => `Item ${idx + 1}`);
+    } else if (problemType === 'modeloInversion') {
+      // Lógica para Modelo de Inversión
+      maxValue = Math.max(...weights.map((w, i) => w * values[i])); // Producto peso-valor
+      itemsSelected = [weights.indexOf(maxValue)];
+    } else if (problemType === 'modeloReemplazoEquipo') {
+      // Lógica para Modelo de Reemplazo de Equipo
+      maxValue = weights.reduce((acc, w) => acc + w, 0) - Math.min(...weights); // Total menos el menor peso
+      itemsSelected = weights.map((w, idx) => `Item ${idx + 1}`);
+    } else if (problemType === 'modeloTamañoFuerza') {
+      // Lógica para Modelo de Tamaño de Fuerza
+      maxValue = weights.reduce((acc, w) => acc + w, 0); // Total de pesos
+      itemsSelected = weights.map((w, idx) => `Item ${idx + 1}`);
+    } else if (problemType === 'nivelEmpleados') {
+      // Lógica para Nivel de Empleados
+      maxValue = values.reduce((acc, v) => acc + v, 0); // Total de valores
+      itemsSelected = values.map((v, idx) => `Empleado ${idx + 1}`);
+    } else if (problemType === 'holguraPorRechazos') {
+      // Lógica para Holgura por Rechazos
+      maxValue = Math.min(...weights); // Menor peso
+      itemsSelected = [weights.indexOf(maxValue)];
+    } else {
+      alert(`Método "${problemType}" aún no implementado.`);
+    }    
 
     setDpResult(maxValue);
     setSelectedItems(itemsSelected);
@@ -193,122 +256,150 @@ export const DynamicProgrammingPage = () => {
         <select
           value={problemType}
           onChange={(e) => setProblemType(e.target.value)}
-          className="p-2 border rounded-lg w-full"
+          className="block w-full p-2 border border-gray-300 rounded-md"
         >
-          <option value="knapsack">Mochila</option>
-          <option value="brigades">Brigadas</option>
-          <option value="routes">Diligencia de Rutas</option>
+          {Object.keys(predefinedProblems).map((key) => (
+            <option key={key} value={key}>
+              {key}
+            </option>
+          ))}
         </select>
       </div>
 
-      {problemType === 'knapsack' || problemType === 'brigades' ? (
-        <div>
-          <div className="mb-4">
-            <label className="block text-lg font-semibold">Capacidad:</label>
-            <input
-              type="number"
-              value={capacity}
-              onChange={(e) => setCapacity(Number(e.target.value))}
-              className="p-2 border rounded-lg"
-            />
-          </div>
+      {problemType === 'knapsack' || problemType === 'brigades' || problemType === 'investment' ? (
+  <div>
+    <div className="mb-4">
+      <label className="block text-lg font-semibold">Capacidad:</label>
+      <input
+        type="number"
+        value={capacity}
+        onChange={(e) => setCapacity(Number(e.target.value))}
+        className="p-2 border rounded-lg"
+      />
+    </div>
 
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-green-600">Datos de Pesos y Valores</h2>
-            <table className="table-auto w-full border-collapse border mt-4">
-              <thead>
-                <tr>
-                  <th className="border px-4 py-2">Ítem</th>
-                  <th className="border px-4 py-2">Peso</th>
-                  <th className="border px-4 py-2">Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Array.from({ length: numItems }).map((_, index) => (
-                  <tr key={index}>
-                    <td className="border px-4 py-2">Ítem {index + 1}</td>
-                    <td className="border px-4 py-2">
-                      <input
-                        type="number"
-                        value={weights[index] || ''}
-                        onChange={(e) => handleInputChange(e, 'weight', index)}
-                        className="p-2 border rounded-lg"
-                      />
-                    </td>
-                    <td className="border px-4 py-2">
-                      <input
-                        type="number"
-                        value={values[index] || ''}
-                        onChange={(e) => handleInputChange(e, 'value', index)}
-                        className="p-2 border rounded-lg"
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : problemType === 'routes' ? (
-        <div>
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-red-600">Distancias entre Ciudades</h2>
-            <table className="table-auto w-full border-collapse border mt-4">
-              <thead>
-                <tr>
-                  <th className="border px-4 py-2">Desde/Ciudad</th>
-                  {[...Array(numItems)].map((_, index) => (
-                    <th key={index} className="border px-4 py-2">Ciudad {index + 1}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[...Array(numItems)].map((_, fromIndex) => (
-                  <tr key={fromIndex}>
-                    <td className="border px-4 py-2">Ciudad {fromIndex + 1}</td>
-                    {[...Array(numItems)].map((_, toIndex) => (
-                      <td key={toIndex} className="border px-4 py-2">
-                        <input
-                          type="number"
-                          value={distances[fromIndex][toIndex] || ''}
-                          onChange={(e) => handleDistanceChange(e, fromIndex, toIndex)}
-                          className="p-2 border rounded-lg"
-                        />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : null}
+    <div className="mb-4">
+      <h2 className="text-xl font-semibold text-green-600">Datos de Pesos y Valores</h2>
+      <table className="table-auto w-full border-collapse border mt-4">
+        <thead>
+          <tr>
+            <th className="border px-4 py-2">Ítem</th>
+            <th className="border px-4 py-2">Peso</th>
+            <th className="border px-4 py-2">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: numItems }).map((_, index) => (
+            <tr key={index}>
+              <td className="border px-4 py-2">Ítem {index + 1}</td>
+              <td className="border px-4 py-2">
+                <input
+                  type="number"
+                  value={weights[index] || ''}
+                  onChange={(e) => handleInputChange(e, 'weight', index)}
+                  className="p-2 border rounded-lg"
+                />
+              </td>
+              <td className="border px-4 py-2">
+                <input
+                  type="number"
+                  value={values[index] || ''}
+                  onChange={(e) => handleInputChange(e, 'value', index)}
+                  className="p-2 border rounded-lg"
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+) : problemType === 'routes' ? (
+  <div>
+    <div className="mb-4">
+      <h2 className="text-xl font-semibold text-red-600">Distancias entre Ciudades</h2>
+      <table className="table-auto w-full border-collapse border mt-4">
+        <thead>
+          <tr>
+            <th className="border px-4 py-2">Desde/Ciudad</th>
+            {[...Array(numItems)].map((_, index) => (
+              <th key={index} className="border px-4 py-2">Ciudad {index + 1}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {[...Array(numItems)].map((_, fromIndex) => (
+            <tr key={fromIndex}>
+              <td className="border px-4 py-2">Ciudad {fromIndex + 1}</td>
+              {[...Array(numItems)].map((_, toIndex) => (
+                <td key={toIndex} className="border px-4 py-2">
+                  <input
+                    type="number"
+                    value={distances[fromIndex]?.[toIndex] || ''}
+                    onChange={(e) => handleDistanceChange(e, fromIndex, toIndex)}
+                    className="p-2 border rounded-lg"
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+) : (
+  <div>
+    <div className="mb-4">
+      <h2 className="text-xl font-semibold text-purple-600">Datos para el Modelo</h2>
+      <table className="table-auto w-full border-collapse border mt-4">
+        <thead>
+          <tr>
+            <th className="border px-4 py-2">Período</th>
+            <th className="border px-4 py-2">Costo</th>
+            <th className="border px-4 py-2">Beneficio</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: numItems }).map((_, index) => (
+            <tr key={index}>
+              <td className="border px-4 py-2">Período {index + 1}</td>
+              <td className="border px-4 py-2">
+                <input
+                  type="number"
+                  value={weights[index] || ''}
+                  onChange={(e) => handleInputChange(e, 'weight', index)}
+                  className="p-2 border rounded-lg"
+                />
+              </td>
+              <td className="border px-4 py-2">
+                <input
+                  type="number"
+                  value={values[index] || ''}
+                  onChange={(e) => handleInputChange(e, 'value', index)}
+                  className="p-2 border rounded-lg"
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
 
-      <div className="mt-6 flex justify-center">
-        <button
-          onClick={calculateDP}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg mr-4"
-        >
-          Calcular
-        </button>
-        <button
-          onClick={resetForm}
-          className="bg-gray-400 text-white px-6 py-2 rounded-lg"
-        >
-          Restablecer
-        </button>
-      </div>
+
+      <button
+        onClick={calculateDP}
+        className="bg-blue-600 text-white px-4 py-2 rounded-md"
+      >
+        Calcular
+      </button>
 
       {dpResult !== null && (
-        <div className="mt-6 text-center">
-          <h2 className="text-xl font-semibold">Resultado</h2>
+        <div>
+          <h2 className="text-xl font-semibold mt-4">Resultado:</h2>
           <p className="text-lg">Valor máximo: {dpResult}</p>
-          <h3 className="mt-4 text-lg font-semibold">Elementos seleccionados:</h3>
-          <ul>
-            {selectedItems.map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
+          <p className="text-lg">Items seleccionados: {selectedItems.join(', ')}</p>
         </div>
       )}
     </div>
